@@ -22,6 +22,6 @@ RUN docker-php-ext-configure gd --enable-gd --with-freetype --with-jpeg \
 
 # COPY . .
 
-RUN chmod o+w ./storage/ -R
+# RUN chmod o+w ./storage/ -R
 
 EXPOSE 9000
