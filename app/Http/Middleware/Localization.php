@@ -4,22 +4,20 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cookie;
+use Symfony\Component\HttpFoundation\Response;
 
 class Localization
 {
-    public function handle(Request $request, Closure $next)
+    /**
+     * Handle an incoming request.
+     *
+     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
+     */
+    public function handle(Request $request, Closure $next): Response
     {
-        $locale = session()->get('locale');
-        if (empty($locale)) {
-            $locale = $request->cookie('locale');
+        if (session()->has('locale')) {
+            app()->setLocale(session()->get('locale'));
         }
-        if (!in_array($locale, config('app.locales'))) {
-            $locale = config('app.fallback_locale');
-        }
-
-        app()->setLocale($locale);
-
         return $next($request);
     }
 }

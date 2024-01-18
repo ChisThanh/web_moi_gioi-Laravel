@@ -4,77 +4,85 @@ namespace App\Http\Controllers\Admin;
 
 use App\Enums\UserRoleEnum;
 use App\Http\Controllers\Controller;
-use App\Models\Company;
 use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\View;
+use DaveJamesMiller\Breadcrumbs\Facades\Breadcrumbs;
+use Illuminate\Contracts\View\View;
 
 class UserController extends Controller
 {
-    private object $model;
-    private string $table;
-
+    protected $model;
+    protected $table;
     public function __construct()
     {
         $this->model = User::query();
-        $this->table = (new User())->getTable();
-
-        View::share('title', ucwords($this->table));
-        View::share('table', $this->table);
+        $this->table = (new User)->getTable();
+        view()->share('title', ucwords($this->table));
     }
-
     public function index(Request $request)
     {
-        $selectedRole    = $request->get('role');
-        $selectedCity    = $request->get('city');
-        $selectedCompany = $request->get('company');
+        $query = $this->model
+            ->clone()
+            ->latest('id');
 
-        $query = $this->model->clone()
-            ->with('company:id,name')
-            ->latest();
-        if (!is_null($selectedRole)) {
-            $query->where('role', $selectedRole);
+        $selectRole = $request->get('role');
+        $selectCity = $request->get('city');
+
+        if (isset($selectRole)) {
+            $query->where('role', $selectRole);
         }
-        if (!is_null($selectedCity)) {
-            $query->where('city', $selectedCity);
+
+        if (isset($selectCity)) {
+            $query->where('city', $selectCity);
         }
-        if (!is_null($selectedCompany)) {
-            $query->whereHas('company', function ($q) use ($selectedCompany) {
-                return $q->where('id', $selectedCompany);
-            });
-        }
-        $data = $query->paginate(1)
-            ->appends($request->all());
+
+        $users = $query->paginate(3);
 
         $roles = UserRoleEnum::asArray();
 
-        $companies = Company::query()
-            ->get([
-                'id',
-                'name',
-            ]);
-
-        $cities = $this->model->clone()
+        $cities = $this->model
+            ->clone()
             ->distinct()
-            ->limit(10)
-            ->whereNotNull('city')
             ->pluck('city');
 
+        $users->appends(['role' => $selectRole, 'city' => $selectCity]);
+
         return view("admin.$this->table.index", [
-            'data'            => $data,
-            'roles'           => $roles,
-            'cities'          => $cities,
-            'companies'       => $companies,
-            'selectedRole'    => $selectedRole,
-            'selectedCity'    => $selectedCity,
-            'selectedCompany' => $selectedCompany,
+            'users' => $users,
+            'roles' => $roles,
+            'cities' => $cities,
+            'selectRole' => $selectRole,
+            'selectCity' => $selectCity,
         ]);
     }
+    public function create()
+    {
+        return view("admin.$this->table.create");
+    }
 
+    public function edit(User $user)
+    {
+        return view(
+            "admin.$this->table.edit",
+            [
+                'user' => $user,
+            ]
+        );
+    }
+    public function update(Request $request, $userId)
+    {
+        $data =  $request->except([
+            '_token',
+            '_method',
+        ]);
+        $object = $this->model->find($userId);
+        $object->fill($data);
+        $object->save();
+        return redirect()->route('admin.users.index');
+    }
     public function destroy($userId)
     {
         User::destroy($userId);
-
         return redirect()->back();
     }
 }

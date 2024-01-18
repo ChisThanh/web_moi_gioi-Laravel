@@ -2,112 +2,110 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Enums\ObjectLanguageTypeEnum;
+use App\Enums\FileTypeEnum;
+use App\Enums\ObjectLanguageEnum;
 use App\Enums\PostCurrencySalaryEnum;
-use App\Enums\PostLevelEnum;
-use App\Enums\PostRemotableEnum;
+use App\Enums\PostStatusEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\ResponseTrait;
 use App\Http\Controllers\SystemConfigController;
-use App\Http\Requests\Post\StoreRequest;
+use App\Http\Requests\post\StoreRequest;
 use App\Imports\PostImport;
 use App\Models\Company;
+use App\Models\File;
 use App\Models\Language;
 use App\Models\ObjectLanguage;
 use App\Models\Post;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\View;
 use Maatwebsite\Excel\Facades\Excel;
-use Throwable;
 
 class PostController extends Controller
 {
+    protected $model;
+    protected $table;
     use ResponseTrait;
-
-    private object $model;
-    private string $table;
-
     public function __construct()
     {
         $this->model = Post::query();
         $this->table = (new Post())->getTable();
-
-        View::share('title', ucwords($this->table));
-        View::share('table', $this->table);
+        view()->share('title', ucwords($this->table));
     }
-
     public function index()
     {
-        $levels = PostLevelEnum::asArray();
-
         return view('admin.posts.index', [
-            'levels' => $levels,
+            'table' => $this->table,
         ]);
     }
-
     public function create()
     {
-        $configs    = SystemConfigController::getAndCache();
-        $remotables = PostRemotableEnum::getArrWithoutAll();
+        $languages = Language::get();
+        // $currencySalary = PostCurrencySalaryEnum::getKeys();
+
+        // $statusInstances = PostCurrencySalaryEnum::getInstances();
+        // $statusArray = [];
+        // foreach ($statusInstances as $instance) {
+        //     $statusArray[$instance->key] = $instance->value;
+        // }
+        $statusArray = collect(PostCurrencySalaryEnum::getInstances())->pluck('value', 'key')->all();
+
+
+        $configs = SystemConfigController::getAndCache();
 
         return view('admin.posts.create', [
-            'currencies' => $configs['currencies'],
-            'countries'  => $configs['countries'],
-            'remotables' => $remotables,
+            'languages' => $configs['languages'],
+            'currencySalary' => $statusArray,
         ]);
-    }
-
-    public function importCsv(Request $request): JsonResponse
-    {
-        try {
-            $levels = $request->input('levels');
-            $file   = $request->file('file');
-
-            Excel::import(new PostImport($levels), $file);
-
-            return $this->successResponse();
-        } catch (Throwable $e) {
-            return $this->errorResponse();
-        }
     }
 
     public function store(StoreRequest $request)
     {
-        DB::beginTransaction();
         try {
-            $arr = $request->validated();
+            DB::beginTransaction();
 
-            $companyName = $request->get('company');
+            $arr = $request->only([
+                "company",
+                "city",
+                "distinct",
+                "min_salary",
+                "max_salary",
+                "currency_salary",
+                "requirement",
+                "number_applicant",
+                "start_date",
+                "end_date",
+                "title",
+                "slug",
+            ]);
+            $companyName = $request->get("company");
 
             if (!empty($companyName)) {
-                $arr['company_id'] = Company::firstOrCreate(['name' => $companyName])->id;
+                $arr['company_id'] = Company::query()->firstOrCreate(['name' => $companyName])->id;
             }
-            if ($request->has('remotable')) {
-                $arr['remotable'] = $request->get('remotable');
-            }
-            if ($request->has('can_parttime')) {
-                $arr['can_parttime'] = 1;
-            }
-
-            $post      = Post::create($arr);
             $languages = $request->get('languages');
+            $post =  Post::create($arr);
 
             foreach ($languages as $language) {
-                $language = Language::firstOrCreate(['name' => $language]);
                 ObjectLanguage::create([
-                    'object_id'   => $post->id,
-                    'language_id' => $language->id,
-                    'object_type' => Post::class,
+                    'language_id' => $language,
+                    'object_id' => $post->id,
+                    'object_type' => ObjectLanguageEnum::POST,
                 ]);
             }
 
             DB::commit();
-            return $this->successResponse();
-        } catch (Throwable $e) {
+            return $this->successResponse(
+                '',
+                'Thành công rồi nè',
+            );
+        } catch (\Throwable $th) {
             DB::rollBack();
-            return $this->errorResponse($e->getMessage());
+            return $this->errorResponse($th);
         }
+    }
+
+    public function importCSV(Request $request)
+    {
+        Excel::import(new PostImport, $request->file('file'));
     }
 }

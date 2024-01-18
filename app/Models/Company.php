@@ -8,21 +8,17 @@ use Illuminate\Database\Eloquent\Model;
 class Company extends Model
 {
     use HasFactory;
-
     public $timestamps = false;
-
     protected $fillable = [
-        "name",
         "address",
+        "address2",
+        "city",
         "country",
-        "zipcode",
-        "phone",
+        "district",
         "email",
         "logo",
+        "name",
+        "phone",
+        "zipcode",
     ];
-
-    public function posts()
-    {
-        return $this->hasMany(Post::class);
-    }
 }

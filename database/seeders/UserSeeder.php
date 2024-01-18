@@ -5,22 +5,21 @@ namespace Database\Seeders;
 use App\Enums\UserRoleEnum;
 use App\Models\Company;
 use App\Models\User;
+use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class UserSeeder extends Seeder
 {
     /**
      * Run the database seeds.
-     *
-     * @return void
      */
-    public function run()
+    public function run(): void
     {
         $arr = [];
         $faker = \Faker\Factory::create();
         $companies = Company::query()->pluck('id')->toArray();
 
-        for($i = 1; $i <= 100000; $i++){
+        for ($i = 1; $i <= 10; $i++) {
             $arr[] = [
                 'name'     => $faker->firstName . ' ' . $faker->lastName,
                 'avatar' => $faker->imageUrl(),
@@ -35,7 +34,7 @@ class UserSeeder extends Seeder
                 'city' => $faker->city,
                 'company_id' => $companies[array_rand($companies)],
             ];
-            if($i % 1000 === 0){
+            if ($i % 10 === 0) {
                 User::insert($arr);
                 $arr = [];
             }

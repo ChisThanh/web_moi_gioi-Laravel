@@ -1,423 +1,563 @@
-@extends('layout.master')
-@push('css')
-    <link href="{{ asset('css/summernote-bs4.css') }}" rel="stylesheet" type="text/css"/>
-    <style>
-        .error {
-            color: red !important;
-        }
-
-        input[data-switch]:checked + label:after {
-            left: 90px;
-        }
-
-        input[data-switch] + label {
-            width: 110px;
-        }
-    </style>
-@endpush
+@extends('admin.layouts.master')
 @section('content')
     <div class="row">
         <div class="col-12">
             <div class="card">
-                <div id="div-error" class="alert alert-danger d-none"></div>
                 <div class="card-body">
-                    <form class="form-horizontal" action="{{ route('admin.posts.store') }}" method="post"
-                          id="form-create-post">
-                        @csrf
-                        <div class="form-group">
-                            <label>Company</label>
-                            <select class="form-control" name="company" id='select-company'></select>
+                    <div class="row mb-2">
+                        <div class="col-sm-4">
+                            <p class="btn btn-danger mb-2">
+                                {{ $title }}
+                            </p>
                         </div>
-                        <div class="form-group">
-                            <label>Language (*)</label>
-                            <select class="form-control" multiple name="languages[]" id='select-language'></select>
-                        </div>
-                        <div class="form-row select-location">
-                            <div class="form-group col-6">
-                                <label>City (*)</label>
-                                <select class="form-control select-city" name="city" id='select-city'></select>
+                        <div class="col-sm-8">
+                            <div class="text-sm-right">
+                                <button type="button" class="btn btn-success mb-2 mr-1"><i
+                                        class="mdi mdi-settings"></i></button>
+                                <button type="button" class="btn btn-light mb-2 mr-1">Import</button>
+                                <button type="button" class="btn btn-light mb-2">Export</button>
                             </div>
-                            <div class="form-group col-6">
-                                <label>District</label>
-                                <select class="form-control select-district" name="district"
-                                        id='select-district'></select>
+                        </div><!-- end col-->
+                    </div>
+                    <hr>
+                    <div class="table">
+                        <form action="{{ route('admin.posts.store') }}" method="POST" id="form-create">
+                            @csrf
+                            <div class="form-row">
+                                <div class="form-group col-md">
+                                    <label for="#" class="col-form-label">Company</label>
+                                    <select class="form-control select2" data-toggle="select2"
+                                        name="company"data-tags="true" id="select-company">
+
+                                    </select>
+                                </div>
+                                <div class="form-group col-md">
+                                    <label for="#" class="col-form-label">Language</label>
+                                    <select class="form-control select2-multiple" data-toggle="select2" multiple="multiple"
+                                        data-placeholder="Choose ..." name="languages[]">
+                                        @foreach ($languages as $value)
+                                            <option value="{{ $value->id }}">{{ $value->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
                             </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group col-4">
-                                <label>Min Salary</label>
-                                <input type="number" name="min_salary" class="form-control">
+                            <div class="form-row">
+                                <div class="form-group col-md-6">
+                                    <label for="#" class="col-form-label">City</label>
+                                    <select class="form-control select2" data-toggle="select2" id="select-city"
+                                        name="city">
+                                    </select>
+                                </div>
+                                <div class="form-group col-md-6">
+                                    <label for="#" class="col-form-label">Distinct</label>
+                                    <select class="form-control select2" data-toggle="select2" id="select-distinct"
+                                        name="distinct">
+                                    </select>
+                                </div>
                             </div>
-                            <div class="form-group col-4">
-                                <label>Max Salary</label>
-                                <input type="number" name="max_salary" class="form-control">
+                            <div class="form-row">
+                                <div class="form-group col-md">
+                                    <label for="min_salary" class="col-form-label">Min Salary</label>
+                                    <input type="text" class="form-control" id="min_salary" name="min_salary">
+                                </div>
+
+                                <div class="form-group col-md">
+                                    <label for="max_salary" class="col-form-label">Max Salary</label>
+                                    <input type="text" class="form-control" id="max_salary" name="max_salary">
+                                </div>
+                                <div class="form-group col-md">
+                                    <label for="currency_salary" class="col-form-label">Currency Salary</label>
+                                    <select id="currency_salary" class="form-control" name="currency_salary">
+                                        @foreach ($currencySalary as $val => $index)
+                                            <option value="{{ $index++ }}">{{ $val }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
                             </div>
-                            <div class="form-group col-4">
-                                <label>Max Salary</label>
-                                <select name="currency_salary" class="form-control">
-                                    @foreach($currencies as $currency => $value)
-                                        <option value="{{ $value }}">
-                                            {{ $currency }}
-                                        </option>
-                                    @endforeach
-                                </select>
+                            <div class="form-row">
+                                <div class="form-group col-md-8">
+                                    <label for="requirement" class="col-form-label">Requirement</label>
+                                    <textarea class="form-control" name="requirement" id="requirement">
+                                </textarea>
+                                </div>
+                                <div class="form-group col-md">
+                                    <label for="number_applicant" class="col-form-label">Number applicant</label>
+                                    <input type="number" class="form-control" id="number_applicant"
+                                        name="number_applicant">
+
+                                </div>
                             </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group col-8">
-                                <label>Requirement</label>
-                                <textarea name="requirement" id="text-requirement"></textarea>
+                            <div class="form-row">
+                                <div class="form-group col-md">
+                                    <label for="start_date" class="col-form-label">Start Date</label>
+                                    <input type="date" class="form-control" id="start_date" name="start_date">
+                                </div>
+                                <div class="form-group col-md">
+                                    <label for="end_date" class="col-form-label">End Date</label>
+                                    <input type="date" class="form-control" id="end_date" name="end_date">
+
+                                </div>
                             </div>
-                            <div class="form-group col-4">
-                                <label>Number Applicants</label>
-                                <input type="number" name="number_applicants" class="form-control">
-                                <br>
-                                <select name="remotable" class="form-control">
-                                    @foreach($remotables as $key => $val)
-                                        <option value="{{ $val }}">
-                                            {{ __('frontpage.' . strtolower($key)) }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                                <br>
-                                <input type="checkbox" name="can_parttime" id="can_parttime" checked data-switch="info">
-                                <label for="can_parttime" data-on-label="Can Part-time"
-                                       data-off-label="No Part-time"></label>
+                            <div class="form-row">
+                                <div class="form-group col-md">
+                                    <label for="title" class="col-form-label">Title</label>
+                                    <input type="text" class="form-control" id="title" name="title">
+                                </div>
+                                <div class="form-group col-md">
+                                    <label for="#" class="col-form-label">Slug</label>
+                                    <input type="text" class="form-control" name="slug" id="slug">
+                                </div>
                             </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group col-6">
-                                <label>Start Date</label>
-                                <input type="date" name="start_date" class="form-control">
+                            <div class="form-group">
+                                <center>
+                                    <button type="submit" class="btn btn-primary">Submit</button>
+                                </center>
                             </div>
-                            <div class="form-group col-6">
-                                <label>End Date</label>
-                                <input type="date" name="end_date" class="form-control">
-                            </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group col-6">
-                                <label>Title</label>
-                                <input type="text" name="job_title" class="form-control" id="title">
-                            </div>
-                            <div class="form-group col-6">
-                                <label>Slug</label>
-                                <input type="text" name="slug" class="form-control" id="slug">
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <button class="btn btn-success" id="btn-submit">Create</button>
-                        </div>
-                    </form>
+
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-    <div id="modal-company" class="modal fade" role="dialog">
+    <div class="modal fade" id="model-company" tabindex="-1" role="dialog" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h4 class="modal-title">Create Company</h4>
-                    <button type="button" class="close float-right" data-dismiss="modal">&times;</button>
+                    <h4 class="modal-title" id="myLargeModalLabel">Add company</h4>
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
                 </div>
                 <div class="modal-body">
-                    <form id="form-create-company" class="form-horizontal" action="{{ route('admin.companies.store') }}"
-                          method="post" enctype="multipart/form-data">
+                    <form action="{{ route('admin.company.store') }}" method="POST" id="form-company"
+                        enctype="multipart/form-data">
                         @csrf
-                        <div class="form-group">
-                            <label>Company</label>
-                            <input readonly name="name" id="company" class="form-control">
+                        <div class="form-row">
+                            <div class="form-group col-md">
+                                <label for="company-name" class="col-form-label">Company Name</label>
+                                <input type="text" class="form-control" id="company-name" placeholder="Name"
+                                    name="name">
+                            </div>
                         </div>
-                        <div class="form-row select-location">
-                            <div class="form-group col-4">
-                                <label>Country (*)</label>
-                                <select class="form-control" name="country" id='country'>
-                                    @foreach($countries as $val => $name)
-                                        <option value="{{ $val }}">
-                                            {{ $name }}
-                                        </option>
-                                    @endforeach
+                        <div class="form-row">
+                            <div class="form-group col-md-6">
+                                <label for="select-city-company" class="col-form-label">City</label>
+                                <select class="form-control select2" data-toggle="select2" id="select-city-company"
+                                    name="city-company">
                                 </select>
                             </div>
-                            <div class="form-group col-4">
-                                <label>City (*)</label>
-                                <select class="form-control select-city" name="city" id='city'></select>
-                            </div>
-                            <div class="form-group col-4">
-                                <label>District</label>
-                                <select class="form-control select-district" name="district" id='district'></select>
+                            <div class="form-group col-md-6">
+                                <label for="select-distinct-company" class="col-form-label">Distinct</label>
+                                <select class="form-control select2" data-toggle="select2" id="select-distinct-company"
+                                    name="distinct-company">
+                                </select>
                             </div>
                         </div>
                         <div class="form-row">
-                            <div class="form-group col-6">
-                                <label>Address</label>
-                                <input type="text" name="address" class="form-control">
+                            <div class="form-group col-md">
+                                <label for="address" class="col-form-label">Address</label>
+                                <input type="text" class="form-control" id="address" placeholder="Address"
+                                    name="address">
                             </div>
-                            <div class="form-group col-6">
-                                <label>Address2</label>
-                                <input type="text" name="address2" class="form-control">
-                            </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group col-6">
-                                <label>Zipcode</label>
-                                <input type="number" name="zipcode" class="form-control">
-                            </div>
-                            <div class="form-group col-6">
-                                <label>Phone</label>
-                                <input type="number" name="phone" class="form-control">
+                            <div class="form-group col-md">
+                                <label for="address2" class="col-form-label">Address2</label>
+                                <input type="text" class="form-control" id="address2" placeholder="Address2"
+                                    name="address2">
                             </div>
                         </div>
                         <div class="form-row">
-                            <div class="form-group col-6">
-                                <label>Email</label>
-                                <input type="email" name="email" class="form-control">
+                            <div class="form-group col-md">
+                                <label for="address" class="col-form-label">Zipcode</label>
+                                <input type="text" class="form-control" id="address" placeholder="Zipcode"
+                                    name="zipcode">
                             </div>
-                            <div class="form-group col-6">
-                                <label>Logo</label>
-                                <input type="file" name="logo"
-                                       oninput="pic.src=window.URL.createObjectURL(this.files[0])">
-                                <img id="pic" height="100"/>
+                            <div class="form-group col-md">
+                                <label for="address2" class="col-form-label">Phone</label>
+                                <input type="text" class="form-control" id="address2" placeholder="Phone"
+                                    name="phone">
                             </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group col-md">
+                                <label for="address" class="col-form-label">Email</label>
+                                <input type="text" class="form-control" id="address" placeholder="Email"
+                                    name="email">
+                            </div>
+                            <div class="form-group col-md">
+                                <label for="##" class="col-form-label">Logo</label>
+                                <input type="file" id="file-logo" class="d-none" name="logo"
+                                    onchange="document.getElementById('blah').src = window.URL.createObjectURL(this.files[0])">
+
+                                <label for="file-logo" class="btn-success form-control">Upload Logo</label>
+
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group col-md">
+                            </div>
+                            <div class="form-group col-md">
+                                <img class="col-form-label" id="blah" alt="your image" width="100"
+                                    height="100" />
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <center>
+                                <button type="submit" class="btn btn-primary">Add Company</button>
+                            </center>
                         </div>
                     </form>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" onclick="submitForm('company')" class="btn btn-success">Create</button>
-                </div>
-            </div>
-        </div>
-    </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div><!-- /.modal -->
 @endsection
+@push('css')
+    <link href="{{ asset('admin/assets/css/vendor/summernote-bs4.css') }}" rel="stylesheet" type="text/css"
+        id="light-style" />
+@endpush
 @push('js')
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.3/jquery.validate.js"></script>
-    <script src="{{ asset('js/summernote-bs4.min.js') }}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery-validation@1.19.5/dist/jquery.validate.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"></script>
+    <script src="{{ asset('admin/assets/js/vendor/summernote-bs4.min.js') }}"></script>
+
     <script>
-        {{-- ($levels - $city) $languages - $company --}}
-        function generateTitle() {
-            let languages = [];
-            $("#select-language :selected").map(function (i, v) {
-                languages.push($(v).text());
-            });
-            languages = languages.join(',');
-            const city = $("#select-city").val();
-            const company = $("#select-company").val();
-            let title = `(${city}) ${languages}`;
-            if (company) {
-                title += ' - ' + company;
+        $(document).ready(function() {
+
+            $('#requirement').summernote();
+            async function fetchData(url) {
+                try {
+                    const response = await fetch(url);
+                    const data = await response.json();
+                    return data;
+                } catch (error) {
+                    console.error('Error fetching data:', error);
+                    throw error;
+                }
             }
 
-            $("#title").val(title);
-            generateSlug(title);
-        }
-
-        function generateSlug(title) {
-            $.ajax({
-                url: '{{ route('api.posts.slug.generate') }}',
-                type: 'POST',
-                dataType: 'json',
-                data: {title},
-                success: function (response) {
-                    $("#slug").val(response.data);
-                    $("#slug").trigger("change");
-                },
-                error: function (response) {
-
-                }
-            });
-        }
-
-        async function loadDistrict(parent) {
-            parent.find(".select-district").empty();
-            const path = parent.find(".select-city option:selected").data('path');
-            if (!path) {
-                return;
-            }
-            const response = await fetch('{{ asset('locations/') }}' + path);
-            const districts = await response.json();
-            let string = '';
-            const selectedValue = $("#select-district").val();
-            $.each(districts.district, function (index, each) {
-                if (each.pre === 'Quận' || each.pre === 'Huyện') {
-                    string += `<option`;
-                    if (selectedValue === each.name) {
-                        string += ` selected `;
-                    }
-                    string += `>${each.name}</option>`;
-                }
-            })
-            parent.find(".select-district").append(string);
-        }
-
-        function checkCompany() {
-            $.ajax({
-                url: '{{ route('api.companies.check') }}/' + $("#select-company").val(),
-                type: 'GET',
-                dataType: 'json',
-                success: async function (response) {
-                    if (response.data) {
-                        submitForm('post');
-                    } else {
-                        $("#modal-company").modal("show");
-                        $("#company").val($("#select-company").val());
-                        $("#city").val($("#select-city").val()).trigger('change');
-                    }
-                }
-            });
-        }
-
-        function showError(errors) {
-            let string = '<ul>';
-            if (Array.isArray(errors)) {
-                errors.forEach(function (each) {
-                    each.forEach(function (error) {
-                        string += `<li>${error}</li>`;
-                    });
+            async function loadCities() {
+                const cityJs = await fetchData('{{ asset('location/city.json') }}');
+                cityJs.forEach(each => {
+                    $("#select-city")
+                        .append(`<option
+                        data-id="${each.code}"
+                        value="${each.name}">${each.name}</option>`);
+                    $("#select-city-company")
+                        .append(`<option
+                        data-id="${each.code}"
+                        value="${each.name}">${each.name}</option>`);
                 });
-            } else {
-                string += `<li>${errors}</li>`;
+                var code = $('#select-city').find(':selected').data('id');
+                loadDistinct(code);
+
             }
-            string += '</ul>';
-            $("#div-error").html(string);
-            $("#div-error").removeClass("d-none").show();
-            notifyError(string);
-        }
 
-        function submitForm(type) {
-            const obj = $("#form-create-" + type);
-            const formData = new FormData(obj[0]);
-            $.ajax({
-                url: obj.attr('action'),
-                type: 'POST',
-                dataType: 'json',
-                data: formData,
-                processData: false,
-                contentType: false,
-                async: false,
-                cache: false,
-                enctype: 'multipart/form-data',
-                success: function (response) {
-                    if (response.success) {
-                        $("#div-error").hide();
-                        $("#modal-company").modal("hide");
-                        notifySuccess();
-                        {{--window.location.href = '{{ route('admin.posts.index') }}';--}}
-                    } else {
-                        showError(response.message);
+            async function loadDistinct(cityCode) {
+                const distinctJs = await fetchData('{{ asset('location/distinct.json') }}');
+                distinctJs.forEach(each => {
+                    if (each.province_code === parseInt(cityCode)) {
+                        $("#select-distinct")
+                            .append(`<option
+                            data-id="${each.code}"
+                            value="${each.name}">${each.name}</option>`);
+                        $("#select-distinct-company")
+                            .append(`<option
+                            data-id="${each.code}"
+                            value="${each.name}">${each.name}</option>`);
                     }
-                },
-                error: function (response) {
-                    let errors;
-                    if (response.responseJSON.errors) {
-                        errors = Object.values(response.responseJSON.errors);
-                        showError(errors);
-                    } else {
-                        errors = response.responseJSON.message;
-                        showError(errors);
+                });
+            }
+
+            function actionSelect() {
+                let changingSelectCity = false;
+                let changingSelectDis = false;
+
+                $('#select-city').on('change', function() {
+                    $("#select-distinct").empty();
+                    $("#select-distinct-company").empty();
+                    var code = $('#select-city').find(':selected').data('id');
+                    loadDistinct(code);
+                    updateGenerateTitle();
+                    if (!changingSelectCity) {
+                        changingSelectCity = true;
+                        const selectedValue = $(this).val();
+                        $('#select-city-company').val(selectedValue).trigger('change');
+                        changingSelectCity = false;
                     }
-                }
-            });
-        }
-
-        $(document).ready(async function () {
-            $("#text-requirement").summernote();
-            $("#select-city").select2({tags: true});
-            $("#city").select2({tags: true});
-            const response = await fetch('{{ asset('locations/index.json') }}');
-            const cities = await response.json();
-            $.each(cities, function (index, each) {
-                $("#select-city").append(`
-                <option data-path='${each.file_path}'>
-                    ${index}
-                </option>`)
-                $("#city").append(`
-                <option data-path='${each.file_path}'>
-                    ${index}
-                </option>`)
-            })
-            $("#select-city, #city").change(function () {
-                loadDistrict($(this).parents('.select-location'));
-            });
-            $('#select-district').select2({tags: true});
-            $('#district').select2({tags: true});
-            await loadDistrict($('#select-city').parents('.select-location'));
-
-            $("#select-company").select2({
-                tags: true,
-                ajax: {
-                    url: '{{ route('api.companies') }}',
-                    data: function (params) {
-                        const queryParameters = {
-                            q: params.term
-                        };
-
-                        return queryParameters;
-                    },
-                    processResults: function (data) {
-                        return {
-                            results: $.map(data.data, function (item) {
-                                return {
-                                    text: item.name,
-                                    id: item.name
-                                }
-                            })
-                        };
+                });
+                $('#select-city-company').on('change', function() {
+                    $("#select-distinct").empty();
+                    $("#select-distinct-company").empty();
+                    if (!changingSelectCity) {
+                        changingSelectCity = true;
+                        const selectedValue = $(this).val();
+                        $('#select-city').val(selectedValue).trigger('change');
+                        changingSelectCity = false;
                     }
-                }
-            });
-            $("#select-language").select2({
-                ajax: {
-                    url: '{{ route('api.languages') }}',
-                    data: function (params) {
-                        const queryParameters = {
-                            q: params.term
-                        };
-
-                        return queryParameters;
-                    },
-                    processResults: function (data) {
-                        return {
-                            results: $.map(data.data, function (item) {
-                                return {
-                                    text: item.name,
-                                    id: item.id
-                                }
-                            })
-                        };
+                });
+                $('#select-distinct').on('change', function() {
+                    if (!changingSelectDis) {
+                        changingSelectDis = true;
+                        const selectedValue = $(this).val();
+                        $('#select-distinct-company').val(selectedValue).trigger('change');
+                        changingSelectDis = false;
                     }
-                }
-            });
+                });
+                $('#select-distinct-company').on('change', function() {
+                    var code = $('#select-city-company').find(':selected').data('id');
+                    loadDistinct(code);
+                    if (!changingSelectDis) {
+                        changingSelectDis = true;
+                        const selectedValue = $(this).val();
+                        $('#select-distinct').val(selectedValue).trigger('change');
+                        changingSelectDis = false;
+                    }
+                });
 
-            $(document).on('change', '#select-language, #select-company, #select-city', function () {
-                generateTitle();
-            })
+                $('select[name="company"]').change(function() {
+                    updateGenerateTitle();
+                });
+                $('select[name="city"]').change(function() {
 
-            $("#slug").change(function () {
-                $("#btn-submit").attr('disabled', true);
+                });
+                $('select[name="languages[]"]').change(function() {
+                    updateGenerateTitle();
+                });
+            }
+            loadCities();
+            actionSelect();
+
+            function removeDiacritics(str) {
+                return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+            }
+
+            function updateGenerateTitle() {
+                var city = $('select[name="city"] :selected').text();
+                var company = $('select[name="company"] :selected').text();
+                var languages = $('select[name="languages[]"] :selected').map(function() {
+                    return $(this).text();
+                }).get();
+                var title = '(' + city + ') - ' + company.trim() + ': ' + (languages.length > 0 ? languages.join(
+                        ', ') :
+                    '');
+                $('#title').val(title);
+                GenerateSlug(title);
+            }
+
+            function GenerateSlug(title) {
                 $.ajax({
-                    url: '{{ route('api.posts.slug.check') }}',
-                    type: 'GET',
-                    dataType: 'json',
-                    data: {slug: $(this).val()},
-                    success: function (response) {
-                        if (response.success) {
-                            $("#btn-submit").attr('disabled', false);
+                    type: "POST",
+                    url: "{{ route('api.posts.generateSlug') }}",
+                    data: {
+                        title: title
+                    },
+                    dataType: "json",
+                    success: function(response) {
+                        $('#slug').val(response.data);
+                    },
+                    error: function(response) {
+                        console.error('');
+                    }
+                });
+
+            }
+
+            $("#form-create").submit(function(e) {
+                e.preventDefault();
+                var $company = $('select[name="company"] :selected').text().trim();
+                $.ajax({
+                    type: "PUT",
+                    url: `{{ route('api.company.check') }}/${$company}`,
+                    dataType: "json",
+                    success: function(response) {
+                        if (response.data) {
+                            var $form = $("#form-create");
+
+                            submitForm($form);
+                        } else {
+                            $('#model-company').modal('show');
+                            $('#company-name').val($('#select-company').val());
                         }
                     }
                 });
-            })
-
-            $("#form-create-post").validate({
-                rules: {
-                    company: {
-                        required: true
-                    }
-                },
-                submitHandler: function () {
-                    checkCompany();
-                }
             });
+
+            function submitForm($form) {
+                var formData = new FormData($form[0]);
+                $.ajax({
+                    type: "POST",
+                    url: $form.attr('action'),
+                    data: formData,
+                    dataType: "json",
+                    async: false,
+                    cache: false,
+                    processData: false,
+                    contentType: false,
+                    enctype: 'multipart/form-data',
+                    success: function(response) {
+                        notifySuccess(response.message);
+                    },
+                    error: function(response) {
+                        if (!response.success && response.success !== undefined) {
+                            notifyError(response.message);
+                        }
+                        if (response.responseJSON && response.responseJSON.errors) {
+                            var formattedErrors = {};
+                            $.each(response.responseJSON.errors, function(key, value) {
+                                formattedErrors[key] = value.join('<br>');
+                            });
+                            $form.validate().showErrors(formattedErrors);
+                            $form.find(".error").siblings("label.error").addClass("text-danger");
+                        }
+                    }
+                });
+            }
+
+            function loadCompanies() {
+                $('#select-company').empty();
+                $.ajax({
+                    type: "GET",
+                    url: "{{ route('api.company') }}",
+                    success: function(response) {
+                        $.each(response.data, function(index, value) {
+                            $('#select-company')
+                                .append(`<option value="${value.name}">${value.name}</option>`);
+                        });
+                    }
+                });
+            }
+            loadCompanies();
+
+
+
+            $('#form-company').submit(function(e) {
+                e.preventDefault();
+                var $form = $(this);
+                submitForm($form);
+                $('#model-company').modal('hide');
+            });
+
+
+
+
+            function notifySuccess(message = '') {
+                $.toast({
+                    heading: 'Success',
+                    text: message,
+                    showHideTransition: 'slide',
+                    position: 'bottom-right',
+                    icon: 'success'
+                })
+            }
+
+
+            function notifyError(message = '') {
+                $.toast({
+                    heading: 'ERROR',
+                    text: message,
+                    showHideTransition: 'slide',
+                    position: 'bottom-right',
+                    icon: 'error'
+                })
+            }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            // $("#form-create").validate({
+            // // rules: {
+            // // min_salary: {
+            // // required: true,
+            // // },
+            // // max_salary: {
+            // // required: true,
+            // // },
+            // // title: {
+            // // required: true,
+            // // },
+            // // },
+            // errorClass: "text-danger",
+            // // messages: {
+            // // min_salary: {
+            // // required: "Vui lòng nhập mức lương tối thiểu."
+            // // },
+            // // max_salary: {
+            // // required: "Vui lòng nhập mức lương tối đa."
+            // // },
+            // // title: {
+            // // required: "Vui lòng nhập tiêu đề."
+            // // }
+            // // },
+            // submitHandler: function(form) {
+            // $.ajax({
+            // type: "POST",
+            // url: $(form).attr('action'),
+            // data: $(form).serialize(),
+            // dataType: "json",
+            // success: function(response) {
+            // },
+            // error: function(response) {
+            // if (response.responseJSON && response.responseJSON.errors) {
+            // var formattedErrors = {};
+            // $.each(response.responseJSON.errors, function(key, value) {
+            // formattedErrors[key] = value.join('<br>');
+            // });
+            // $("#form-create").validate().showErrors(formattedErrors);
+            // }
+            // }
+            // });
+            // }
+            // });
+
         });
     </script>
 @endpush
+
+{{--
+@guest
+                            @if (Route::has('login'))
+                                <li class="nav-item">
+                                    <a class="nav-link" href="{{ route('login') }}">{{ __('Login') }}</a>
+                                </li>
+                            @endif
+
+                            @if (Route::has('register'))
+                                <li class="nav-item">
+                                    <a class="nav-link" href="{{ route('register') }}">{{ __('Register') }}</a>
+                                </li>
+                            @endif
+                        @else
+                            <li class="nav-item dropdown">
+                                <a id="navbarDropdown" class="nav-link dropdown-toggle" href="#" role="button"
+                                    data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" v-pre>
+                                    {{ Auth::user()->name }}
+                                </a>
+
+                                <div class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+                                    <a class="dropdown-item" href="{{ route('logout') }}"
+                                        onclick="event.preventDefault();
+                                                     document.getElementById('logout-form').submit();">
+                                        {{ __('Logout') }}
+                                    </a>
+
+                                    <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
+                                        @csrf
+                                    </form>
+                                </div>
+                            </li>
+                        @endguest --}}
